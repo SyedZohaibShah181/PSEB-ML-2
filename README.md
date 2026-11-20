@@ -12,6 +12,7 @@ Online_Retail_ML_Project/
 |-- data/
 |   |-- raw/
 |   |   |-- Online Retail.xlsx
+|   |   |-- new_rows_sample.csv
 |   |   `-- online_retail.csv
 |   `-- cleaned/
 |       `-- online_retail_cleaned.csv
@@ -23,14 +24,16 @@ Online_Retail_ML_Project/
 |   `-- 02_analysis.ipynb
 |-- outputs/
 |   |-- figures/
-|   `-- reports/
-|       |-- data_quality.md
-|       |-- errors.csv
-|       |-- invoice_level_dataset.csv
-|       |-- model_comparison.csv
-|       |-- monthly_revenue.csv
-|       |-- test_metrics.json
-|       `-- top_countries_revenue.csv
+|   |-- reports/
+|   |   |-- data_quality.md
+|   |   |-- errors.csv
+|   |   |-- invoice_level_dataset.csv
+|   |   |-- model_comparison.csv
+|   |   |-- monthly_revenue.csv
+|   |   |-- test_metrics.json
+|   |   |-- test_predictions.csv
+|   |   `-- top_countries_revenue.csv
+|   `-- predictions_sample.csv
 |-- sql/
 |   |-- analysis.sql
 |   `-- retail.db
@@ -38,6 +41,7 @@ Online_Retail_ML_Project/
 |   |-- cleaning.py
 |   |-- inspect_data.py
 |   |-- load_sqlite.py
+|   |-- predict.py
 |   |-- run_pipeline.py
 |   |-- train.py
 |   `-- validation.py
@@ -70,4 +74,7 @@ python src/load_sqlite.py
 
 # 4. Train baseline tabular ML models and evaluate best model
 python src/train.py
+
+# 5. Run batch predictions on unseen data
+python src/predict.py --input data/raw/new_rows_sample.csv --output outputs/predictions_sample.csv
 ```
