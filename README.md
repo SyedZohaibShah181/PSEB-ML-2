@@ -32,6 +32,7 @@ Online_Retail_ML_Project/
 |   |-- cleaning.py
 |   |-- inspect_data.py
 |   |-- load_sqlite.py
+|   |-- run_pipeline.py
 |   `-- validation.py
 |-- tests/
 |   |-- test_cleaning.py
@@ -44,16 +45,19 @@ Online_Retail_ML_Project/
 
 ```powershell
 python -m venv .venv
-.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
 ## Data Quality Pipeline & Database Load
 
 ```powershell
-# Run unit tests
-pytest
+# 1. Run unit tests
+python -m pytest tests/ -v
 
-# Load cleaned data into SQLite and run SQL reports
+# 2. Run reproducible data cleaning pipeline
+python src/run_pipeline.py --input data/raw/online_retail.csv --output data/cleaned/online_retail_cleaned.csv
+
+# 3. Load cleaned data into SQLite and run SQL reports
 python src/load_sqlite.py
 ```
