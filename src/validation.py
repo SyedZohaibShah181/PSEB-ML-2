@@ -4,6 +4,7 @@
 # Project: Online Retail Data Inspection
 import pandas as pd
 
+
 def check_no_nulls(df: pd.DataFrame, cols: list[str]) -> None:
     """Raise ValueError if any of cols has nulls."""
     for c in cols:

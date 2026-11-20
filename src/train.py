@@ -9,24 +9,29 @@ Leaking columns EXCLUDED from features:
   - Quantity, UnitPrice (used to compute target — MUST exclude raw)
   - Any per-invoice aggregate that reconstructs the target
 """
-import pathlib
 import json
+import pathlib
 import warnings
+
 import joblib
-import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split, StratifiedKFold, cross_validate
-from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.dummy import DummyClassifier
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
+from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import (
-    precision_score, recall_score, f1_score, roc_auc_score,
-    average_precision_score, confusion_matrix, classification_report,
+    average_precision_score,
+    classification_report,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
 )
+from sklearn.model_selection import StratifiedKFold, cross_validate, train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 warnings.filterwarnings("ignore")
 
@@ -65,9 +70,9 @@ def load_and_build_target(path: pathlib.Path) -> pd.DataFrame:
               n_countries=("Country", "nunique"),
               customer=("CustomerID", "first"),
               country=("Country", "first"),
-              invoice_month=("InvoiceDate", lambda s: s.dt.month.iloc[0]),
-              invoice_dow=("InvoiceDate", lambda s: s.dt.dayofweek.iloc[0]),
-              invoice_hour=("InvoiceDate", lambda s: s.dt.hour.iloc[0]),
+              invoice_month=("InvoiceDate", lambda s: s.iloc[0].month),
+              invoice_dow=("InvoiceDate", lambda s: s.iloc[0].dayofweek),
+              invoice_hour=("InvoiceDate", lambda s: s.iloc[0].hour),
           )
           .reset_index()
     )
@@ -230,42 +235,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-def final_eval(model_name, X_train, y_train, X_test, y_test):
-    clf = MODELS_DICT[model_name]
-    pipe = Pipeline([("pre", build_preprocessor()), ("clf", clf)])
-    pipe.fit(X_train, y_train)
-
-    y_pred = pipe.predict(X_test)
-    y_proba = pipe.predict_proba(X_test)[:, 1]
-
-    metrics = {
-        "model": model_name,
-        "precision": float(precision_score(y_test, y_pred, zero_division=0)),
-        "recall": float(recall_score(y_test, y_pred, zero_division=0)),
-        "f1": float(f1_score(y_test, y_pred, zero_division=0)),
-        "roc_auc": float(roc_auc_score(y_test, y_proba)),
-        "pr_auc": float(average_precision_score(y_test, y_proba)),
-    }
-    print("\nTest metrics:", json.dumps(metrics, indent=2))
-    print("\nConfusion matrix:\n", confusion_matrix(y_test, y_pred))
-    print("\nClassification report:\n",
-          classification_report(y_test, y_pred, digits=3))
-
-    joblib.dump(pipe, MODELS / "pipeline.joblib")
-    (REPORTS / "test_metrics.json").write_text(json.dumps(metrics, indent=2))
-
-    # ---- Build a DataFrame with BOTH full test rows AND predictions ----
-    test_df = X_test.copy().reset_index(drop=True)
-    test_df["y_true"] = y_test.reset_index(drop=True).values
-    test_df["y_pred"] = y_pred
-    test_df["y_proba"] = y_proba
-
-    # Save ALL test rows (useful for full error analysis)
-    test_df.to_csv(REPORTS / "test_predictions.csv", index=False)
-
-    # Save ONLY misclassified rows for error analysis
-    errors = test_df[test_df["y_true"] != test_df["y_pred"]].copy()
-    errors.to_csv(REPORTS / "errors.csv", index=False)
-    print(f"\nSaved ALL {len(test_df)} test rows to test_predictions.csv")
-    print(f"Saved {len(errors)} misclassified rows to errors.csv")
-    return metrics

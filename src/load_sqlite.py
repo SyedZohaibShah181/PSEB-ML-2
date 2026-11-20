@@ -2,6 +2,7 @@
 """Load cleaned data into SQLite and run a GROUP BY query."""
 import os
 import sqlite3
+
 import pandas as pd
 
 CLEANED = "data/cleaned/online_retail_cleaned.csv"

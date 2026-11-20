@@ -15,3 +15,7 @@ __pycache__/
 # Operating system files
 .DS_Store
 Thumbs.db
+sql/*.db
+notebooks/sql/*.db
+.coverage
+

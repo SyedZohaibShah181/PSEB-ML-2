@@ -1,9 +1,9 @@
 # Syed Zohaib Shah, PSEB-2026-010729, 2026-11-20
 """Run reproducible end-to-end data cleaning and validation pipeline."""
 import argparse
-import os
 import pathlib
 import sys
+
 import pandas as pd
 
 # Ensure project root is in sys.path so 'src' can be imported regardless of execution cwd
@@ -11,7 +11,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.cleaning import parse_dates, remove_duplicates, handle_missing, remove_outliers
+from src.cleaning import handle_missing, parse_dates, remove_duplicates, remove_outliers
 from src.validation import check_no_nulls, check_range
 
 

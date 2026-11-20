@@ -1,10 +1,15 @@
 # Your Name, Roll Number, 2026-11-18
 import pandas as pd
 import pytest
+
 from src.cleaning import (
-    parse_dates, remove_duplicates, handle_missing,
-    remove_outliers, standardize_categories,
+    handle_missing,
+    parse_dates,
+    remove_duplicates,
+    remove_outliers,
+    standardize_categories,
 )
+
 
 def test_parse_dates_valid():
     df = pd.DataFrame({"d": ["2023-01-01", "2023-02-01"]})

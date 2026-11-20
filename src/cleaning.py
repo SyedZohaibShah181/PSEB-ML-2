@@ -2,8 +2,9 @@
 # Roll Number: PSEB-2026-010729
 # Date: 20-11-2026
 # Project: Online Retail Data Inspection
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 
 def parse_dates(df: pd.DataFrame, col: str) -> pd.DataFrame:
     """Parse date column to datetime; invalid values become NaT.
