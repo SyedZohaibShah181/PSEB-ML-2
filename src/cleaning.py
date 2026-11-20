@@ -55,9 +55,26 @@ def remove_outliers(df: pd.DataFrame, col: str, method: str = "iqr") -> pd.DataF
     raise ValueError(f"Unknown method: {method}")
 
 def standardize_categories(df: pd.DataFrame, col: str, mapping: dict) -> pd.DataFrame:
-    """Map raw values to canonical values. Returns new df."""
+    """Map raw category values to canonical values.
+
+    Values are stripped of whitespace and lowercased before lookup.
+    Rows whose normalized value is not in `mapping` are kept as their
+    stripped original (not lowercased) so case is preserved for unmapped values.
+
+    Args:
+        df: input dataframe
+        col: column to standardize
+        mapping: dict of {lowercase_raw: canonical_value}
+    Returns:
+        new dataframe with standardized column
+    Raises:
+        KeyError if col not in df
+    """
     if col not in df.columns:
         raise KeyError(f"Column '{col}' not found")
     out = df.copy()
-    out[col] = out[col].astype(str).str.strip().map(mapping).fillna(out[col])
+    stripped = out[col].astype(str).str.strip()
+    normalized = stripped.str.lower()
+    mapped = normalized.map(mapping)
+    out[col] = mapped.fillna(stripped)
     return out
