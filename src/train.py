@@ -185,18 +185,23 @@ def final_eval(model_name, X_train, y_train, X_test, y_test):
     print("\nClassification report:\n",
           classification_report(y_test, y_pred, digits=3))
 
-    # Save pipeline + metrics
     joblib.dump(pipe, MODELS / "pipeline.joblib")
     (REPORTS / "test_metrics.json").write_text(json.dumps(metrics, indent=2))
 
-    # Save misclassified rows for error analysis
-    test_df = X_test.copy()
-    test_df["y_true"] = y_test.values
+    # ---- Build a DataFrame with BOTH full test rows AND predictions ----
+    test_df = X_test.copy().reset_index(drop=True)
+    test_df["y_true"] = y_test.reset_index(drop=True).values
     test_df["y_pred"] = y_pred
     test_df["y_proba"] = y_proba
-    errors = test_df[test_df["y_true"] != test_df["y_pred"]]
+
+    # Save ALL test rows (useful for full error analysis)
+    test_df.to_csv(REPORTS / "test_predictions.csv", index=False)
+
+    # Save ONLY misclassified rows for error analysis
+    errors = test_df[test_df["y_true"] != test_df["y_pred"]].copy()
     errors.to_csv(REPORTS / "errors.csv", index=False)
-    print(f"\nSaved {len(errors)} misclassified rows to outputs/reports/errors.csv")
+    print(f"\nSaved ALL {len(test_df)} test rows to test_predictions.csv")
+    print(f"Saved {len(errors)} misclassified rows to errors.csv")
     return metrics
 
 
@@ -225,3 +230,42 @@ def main():
 
 if __name__ == "__main__":
     main()
+def final_eval(model_name, X_train, y_train, X_test, y_test):
+    clf = MODELS_DICT[model_name]
+    pipe = Pipeline([("pre", build_preprocessor()), ("clf", clf)])
+    pipe.fit(X_train, y_train)
+
+    y_pred = pipe.predict(X_test)
+    y_proba = pipe.predict_proba(X_test)[:, 1]
+
+    metrics = {
+        "model": model_name,
+        "precision": float(precision_score(y_test, y_pred, zero_division=0)),
+        "recall": float(recall_score(y_test, y_pred, zero_division=0)),
+        "f1": float(f1_score(y_test, y_pred, zero_division=0)),
+        "roc_auc": float(roc_auc_score(y_test, y_proba)),
+        "pr_auc": float(average_precision_score(y_test, y_proba)),
+    }
+    print("\nTest metrics:", json.dumps(metrics, indent=2))
+    print("\nConfusion matrix:\n", confusion_matrix(y_test, y_pred))
+    print("\nClassification report:\n",
+          classification_report(y_test, y_pred, digits=3))
+
+    joblib.dump(pipe, MODELS / "pipeline.joblib")
+    (REPORTS / "test_metrics.json").write_text(json.dumps(metrics, indent=2))
+
+    # ---- Build a DataFrame with BOTH full test rows AND predictions ----
+    test_df = X_test.copy().reset_index(drop=True)
+    test_df["y_true"] = y_test.reset_index(drop=True).values
+    test_df["y_pred"] = y_pred
+    test_df["y_proba"] = y_proba
+
+    # Save ALL test rows (useful for full error analysis)
+    test_df.to_csv(REPORTS / "test_predictions.csv", index=False)
+
+    # Save ONLY misclassified rows for error analysis
+    errors = test_df[test_df["y_true"] != test_df["y_pred"]].copy()
+    errors.to_csv(REPORTS / "errors.csv", index=False)
+    print(f"\nSaved ALL {len(test_df)} test rows to test_predictions.csv")
+    print(f"Saved {len(errors)} misclassified rows to errors.csv")
+    return metrics
