@@ -39,3 +39,4 @@ print(df.duplicated().sum())
 # Step 9: Display general information
 print("\nDATASET INFORMATION")
 df.info()
+
