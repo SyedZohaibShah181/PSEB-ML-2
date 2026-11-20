@@ -19,3 +19,5 @@ sql/*.db
 notebooks/sql/*.db
 .coverage
 
+
+sql/*.db
