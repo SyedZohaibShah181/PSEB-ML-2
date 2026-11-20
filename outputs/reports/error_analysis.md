@@ -1,3 +1,4 @@
+<!-- Syed Zohaib Shah, Roll Number: PSEB-2026-010729, Date: 2026-11-20 -->
 # Error Analysis — Online Retail ML Baseline
 
 **Model:** Gradient Boosting (best of 4 models, 5-fold stratified CV)

@@ -1,3 +1,4 @@
+-- Syed Zohaib Shah, Roll Number: PSEB-2026-010729, Date: 2026-11-20
 -- Schema and Seed Data for Part C1: Feed Query Index Experiment
 -- Tables: users(500), follows(~2 500), posts(200 000)
 

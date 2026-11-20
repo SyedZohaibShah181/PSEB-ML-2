@@ -1,6 +1,4 @@
-# Name: Syed Zohaib Shah
-# Roll Number: PSEB-2026-010729
-# Date: 20-11-2026
+# Syed Zohaib Shah, Roll Number: PSEB-2026-010729, Date: 2026-11-20
 # Project: Online Retail Data Inspection
 import numpy as np
 import pandas as pd

@@ -1,4 +1,4 @@
-# Syed Zohaib Shah, PSEB-2026-010729, 2026-11-20
+# Syed Zohaib Shah, Roll Number: PSEB-2026-010729, Date: 2026-11-20
 """Part B: Batch prediction CLI for Online Retail ML pipeline."""
 import argparse
 import pathlib

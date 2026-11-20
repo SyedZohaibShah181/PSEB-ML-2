@@ -1,3 +1,4 @@
+<!-- Syed Zohaib Shah, Roll Number: PSEB-2026-010729, Date: 2026-11-20 -->
 # Exploration Homework (Part C)
 
 Short write-ups for C1–C4 in my own words. Sources listed at the end.

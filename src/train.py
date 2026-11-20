@@ -1,4 +1,4 @@
-# Syed Zohaib Shah, PSEB-2026-010729, 2026-11-22
+# Syed Zohaib Shah, Roll Number: PSEB-2026-010729, Date: 2026-11-20
 """Part B: End-to-end tabular ML baseline for Online Retail.
 
 Target: is_high_value_order (1 if invoice total > median, else 0).

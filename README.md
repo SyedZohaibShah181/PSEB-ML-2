@@ -1,3 +1,4 @@
+<!-- Syed Zohaib Shah, Roll Number: PSEB-2026-010729, Date: 2026-11-20 -->
 # Online Retail — Reproducible Data Pipelines & Tabular ML
 
 End-to-end project on the UCI Online Retail dataset: a reproducible data-quality pipeline (Part A), a tabular ML baseline with model comparison and inference (Part B), and an exploration of four engineering topics (Part C).

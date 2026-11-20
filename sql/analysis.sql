@@ -1,3 +1,4 @@
+-- Syed Zohaib Shah, Roll Number: PSEB-2026-010729, Date: 2026-11-20
 -- Top 10 countries by total revenue
 SELECT Country,
        COUNT(*)                     AS n_transactions,
