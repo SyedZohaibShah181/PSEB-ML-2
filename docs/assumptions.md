@@ -29,3 +29,29 @@ Full list: `outputs/reports/permutation_importance.csv`.
 ### Error patterns found
 See `outputs/reports/error_analysis.md` for detail. Summary:
 - ...
+
+
+### Features that mattered most (permutation importance, F1)
+
+| Feature | Mean importance |
+|---|---|
+| total_quantity | 0.442 |
+| avg_unit_price | 0.118 |
+| max_unit_price | 0.007 |
+| n_lines | 0.005 |
+| invoice_month | 0.0004 |
+
+**Makes sense:** the target is a function of `Quantity × UnitPrice`, so the two aggregates that approximate those terms dominate. Country, hour, day-of-week, and month contribute essentially nothing — plausible for a UK-dominated dataset with a fixed business definition of "high value".
+
+### Error patterns found (see `outputs/reports/error_analysis.md`)
+
+- **Overall error rate: 6.1%** (204 / 3,366 test rows), consistent with F1 = 0.94.
+- **Error concentrates in mid-size baskets (4–100 lines).** Single-line and 100+ baskets are error-free.
+- **Two concrete patterns:**
+  1. *False negative:* many cheap items (33 lines, avg £1.25) → model predicts low value but total exceeded the median.
+  2. *False positive:* high line count (44 lines) makes the model predict high value, but low average price means the actual total falls short.
+- **Country and hour are not error drivers.**
+
+### Features with near-zero importance (v2 candidates to drop)
+
+- `invoice_hour`, `invoice_month`, `invoice_dow` — near-zero permutation importance. Removing them simplifies the model without loss of F1.
