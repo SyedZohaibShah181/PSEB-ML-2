@@ -21,3 +21,11 @@
 
 ### Data-quality metrics
 See `outputs/reports/data_quality.md`
+### Features that mattered most (permutation importance, F1)
+Top features: <feat1> >> <feat2> >> <feat3>.
+Makes sense because <one-sentence reason>.
+Full list: `outputs/reports/permutation_importance.csv`.
+
+### Error patterns found
+See `outputs/reports/error_analysis.md` for detail. Summary:
+- ...
