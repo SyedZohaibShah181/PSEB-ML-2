@@ -17,13 +17,19 @@ Online_Retail_ML_Project/
 |       `-- online_retail_cleaned.csv
 |-- docs/
 |   `-- assumptions.md
+|-- models/
+|   `-- pipeline.joblib
 |-- notebooks/
 |   `-- 02_analysis.ipynb
 |-- outputs/
 |   |-- figures/
 |   `-- reports/
 |       |-- data_quality.md
+|       |-- errors.csv
+|       |-- invoice_level_dataset.csv
+|       |-- model_comparison.csv
 |       |-- monthly_revenue.csv
+|       |-- test_metrics.json
 |       `-- top_countries_revenue.csv
 |-- sql/
 |   |-- analysis.sql
@@ -33,6 +39,7 @@ Online_Retail_ML_Project/
 |   |-- inspect_data.py
 |   |-- load_sqlite.py
 |   |-- run_pipeline.py
+|   |-- train.py
 |   `-- validation.py
 |-- tests/
 |   |-- test_cleaning.py
@@ -49,7 +56,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-## Data Quality Pipeline & Database Load
+## Reproducible Pipeline Execution
 
 ```powershell
 # 1. Run unit tests
@@ -60,4 +67,7 @@ python src/run_pipeline.py --input data/raw/online_retail.csv --output data/clea
 
 # 3. Load cleaned data into SQLite and run SQL reports
 python src/load_sqlite.py
+
+# 4. Train baseline tabular ML models and evaluate best model
+python src/train.py
 ```

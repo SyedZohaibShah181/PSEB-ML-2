@@ -11,6 +11,7 @@ Leaking columns EXCLUDED from features:
 """
 import pathlib
 import json
+import warnings
 import joblib
 import numpy as np
 import pandas as pd
@@ -26,6 +27,8 @@ from sklearn.metrics import (
     precision_score, recall_score, f1_score, roc_auc_score,
     average_precision_score, confusion_matrix, classification_report,
 )
+
+warnings.filterwarnings("ignore")
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 CLEANED = ROOT / "data" / "cleaned" / "online_retail_cleaned.csv"
