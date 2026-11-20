@@ -1,3 +1,50 @@
+# Exploration Homework (Part C)
+
+Short write-ups for C1–C4 in my own words. Sources listed at the end.
+
+## C1 — Optimized Query System of a Social Media Algorithm
+
+### Experiment
+- SQLite DB with `users(500)`, `posts(200 000)`, `follows(~2 500)`.
+- Query: newest 20 posts from the set of users user 42 follows.
+- Tested with and without `CREATE INDEX idx_posts_author_created ON posts(author_id, created_at DESC)`.
+
+### EXPLAIN QUERY PLAN — without index
+```text
+(5, 0, 216, 'SCAN p')
+(7, 0, 45, 'SEARCH f USING COVERING INDEX sqlite_autoindex_follows_1 (follower_id=? AND followee_id=?)')
+(25, 0, 0, 'USE TEMP B-TREE FOR ORDER BY')
+```
+
+### EXPLAIN QUERY PLAN — with index
+```text
+(6, 0, 56, 'SEARCH f USING COVERING INDEX sqlite_autoindex_follows_1 (follower_id=?)')
+(10, 0, 62, 'SEARCH p USING INDEX idx_posts_author_created (author_id=?)')
+(29, 0, 0, 'USE TEMP B-TREE FOR ORDER BY')
+```
+
+### Timings
+| Setup | Time (ms) | Speedup |
+|---|---|---|
+| No index | 176.06 ms | 1.0x |
+| Composite index on `(author_id, created_at DESC)` | 2.08 ms | 84.8x |
+
+### Why the naive query is slow at scale
+Without an index, SQLite must scan the entire `posts` table (200,000 rows here; billions at production scale), join to `follows`, and then sort the result by `created_at DESC` — the `USE TEMP B-TREE FOR ORDER BY` line in the plan is the giveaway. Every step is O(N log N) in the number of posts. At 10⁹ posts, this is seconds per feed refresh.
+
+### What the index changes
+The composite index `(author_id, created_at DESC)` stores posts already ordered by author and recency. SQLite uses `SEARCH p USING INDEX` to jump straight to each followed author's slice and walks the index **in descending created_at order** — no separate sort. The `USE TEMP B-TREE` step vanishes, and the query stops after `LIMIT 20` because the first 20 rows in index order are exactly the newest.
+
+### When to precompute feeds instead
+A read-time indexed join works at mid-scale. It fails when (a) a user follows high-volume accounts (the join is dominated by those authors), (b) read latency SLO <20 ms is required, or (c) the feed has non-recency ranking (the ranker has to run somewhere). At that point, fan-out on write materialises each post into follower feeds, trading write amplification for instant reads. A hybrid — precompute top-200 candidates per user offline, re-rank online — is what production feeds actually do.
+
+### What this experiment shows
+The measured speedup (84.8x) with one index and zero change to application code demonstrates why indexing is the first lever for read-heavy workloads. Precomputation only becomes necessary when fan-out or ranking complexity makes the indexed join itself the bottleneck.
+
+## C2 — GitHub Actions, rules, PR rules and code reviews
+
+<!-- fill after CI workflow -->
+
 ## C3 — Theory of System Design
 
 ### Glossary (10 terms, one concrete example each)
@@ -25,9 +72,6 @@
 ### Trade-off: consistency vs availability
 
 A relational database with strong consistency (e.g., Postgres with synchronous replication) will refuse writes if a majority of replicas are unreachable — that's a CP choice under CAP. This is correct for a payments ledger where a duplicate or out-of-order transaction is unacceptable. But for a social feed's "like counter," a duplicate write or a 5-second stale read is harmless, and refusing writes during a partition makes the product feel broken. So feeds typically choose an AP design (e.g., Cassandra with tunable consistency): writes go to the nearest replica, later reconciled, and reads may briefly return stale counts. The right choice depends on the cost of being wrong — money and identity favour consistency; engagement data favours availability.
-
-
-
 
 ## C4 — A Workflow for System Design
 
@@ -84,53 +128,13 @@ I record assumptions in a numbered "Assumptions" block at the top so reviewers c
 - *Analytics are eventually consistent* (minutes lag). Acceptable for user-facing stats; not for billing.
 - **First thing to break**: write traffic on the primary DB under viral growth — mitigate by sharding `urls` by `hash(code) % N`.
 
-## C1 — Optimized Query System of a Social Media Algorithm
+## Sources
 
-### Experiment
-- DB: SQLite, tables `users(500)`, `posts(200 000)`, `follows(2 500)`.
-- Query: newest 20 posts from users user 42 follows.
-- Tested with and without `CREATE INDEX idx_posts_author_created ON posts(author_id, created_at DESC)`.
-
-### EXPLAIN QUERY PLAN — without index
-```text
-(5, 0, 216, 'SCAN p')
-(7, 0, 45, 'SEARCH f USING COVERING INDEX sqlite_autoindex_follows_1 (follower_id=? AND followee_id=?)')
-(25, 0, 0, 'USE TEMP B-TREE FOR ORDER BY')
-```
-
-### EXPLAIN QUERY PLAN — with index
-```text
-(6, 0, 56, 'SEARCH f USING COVERING INDEX sqlite_autoindex_follows_1 (follower_id=?)')
-(10, 0, 62, 'SEARCH p USING INDEX idx_posts_author_created (author_id=?)')
-(29, 0, 0, 'USE TEMP B-TREE FOR ORDER BY')
-```
-
-### Timings
-| Setup | Time (ms) | Speedup |
-|---|---|---|
-| No index | 616.96 ms | 1.0x |
-| Composite index on `posts(author_id, created_at DESC)` | 0.63 ms | 977.3x |
-
-### Why the naive query is slow at scale
-The naive query joins `posts` to `follows` and sorts the result by `created_at DESC`. Without an index, SQLite must:
-1. Scan the entire `posts` table (200,000 rows here; billions at production scale).
-2. Join each row to `follows`.
-3. Sort the joined result (a `USE TEMP B-TREE` step — the giveaway in the plan).
-
-Every step is O(N log N) in the number of posts. In a real system with 10⁹ posts, this is seconds per feed refresh.
-
-### What the index changes
-The composite index `(author_id, created_at DESC)` stores posts already ordered by (author, recency). SQLite can now:
-- Use `SEARCH p USING INDEX` to jump to each followed author's slice of the index.
-- Walk the index **in created_at DESC order** — no separate sort.
-- Stop after `LIMIT 20` rows because the first 20 in index order are exactly the newest.
-
-The `USE TEMP B-TREE FOR ORDER BY` step disappears from the plan. This is the concrete win: **one index eliminates both the full scan and the sort**.
-
-### When to precompute feeds instead
-Indexing a read-time join works for **mid-scale** and **celebrity-free** graphs. It fails when:
-- A user follows many celebrities → the join is dominated by the celebrity's post volume, not the follower's. Fan-out on write (push each post into follower feeds) avoids this by pre-materialising feeds in a `feeds(user_id, post_id, ts)` table — but costs a write amplification of ~200× for a user with 200 followers.
-- Read latency SLO is <20 ms — even an indexed join has cold-cache cost; a precomputed feed is one indexed read.
-- Feed has non-recency ranking (engagement, affinity) — the ranker must run somewhere; doing it offline (precompute top 200 candidates per user, re-rank online) is the standard hybrid.
-
-The index experiment here supports the "read-time join is fine at small-medium scale" answer: it's 10–100× faster with one index and needs no write path. Precompute only when the fan-out graph or ranking complexity makes the join cost unacceptable.
+- GitHub Actions documentation — https://docs.github.com/en/actions
+- GitHub branch protection — https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches
+- SQLite query planner — https://www.sqlite.org/optoverview.html
+- SQLite EXPLAIN QUERY PLAN — https://www.sqlite.org/eqp.html
+- Martin Kleppmann, *Designing Data-Intensive Applications* (O'Reilly, 2017)
+- Martin Fowler, "Design Docs at Google" — https://www.industrialempathy.com/posts/design-docs-at-google/
+- Stripe idempotency docs — https://stripe.com/docs/api/idempotent_requests
+- Cassandra docs — https://cassandra.apache.org/doc/latest/
