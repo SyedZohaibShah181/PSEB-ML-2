@@ -71,7 +71,7 @@ def load_and_build_target(path: pathlib.Path) -> pd.DataFrame:
               customer=("CustomerID", "first"),
               country=("Country", "first"),
               invoice_month=("InvoiceDate", lambda s: s.iloc[0].month),
-              invoice_dow=("InvoiceDate", lambda s: s.iloc[0].dayofweek),
+              invoice_dow=("InvoiceDate", lambda s: s.dt.day_of_week.iloc[0]),
               invoice_hour=("InvoiceDate", lambda s: s.iloc[0].hour),
           )
           .reset_index()
